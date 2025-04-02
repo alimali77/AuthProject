@@ -3,6 +3,7 @@ using AuthMvcProject.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Threading.Tasks;
 
 namespace AuthMvcProject.Controllers
@@ -148,6 +149,32 @@ namespace AuthMvcProject.Controllers
             }
 
             return View();
+        }
+
+        // Add IsEmailAvailable action to handle AJAX validation
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> IsEmailAvailable(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return Json(true);
+            }
+
+            var user = await _userManager.FindByEmailAsync(email);
+
+            // If current user's email, return true
+            if (User.Identity.IsAuthenticated)
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser != null && currentUser.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Json(true);
+                }
+            }
+
+            // Return true if email is available (user is null)
+            return Json(user == null);
         }
     }
 }

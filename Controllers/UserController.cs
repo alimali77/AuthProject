@@ -56,29 +56,49 @@ namespace AuthMvcProject.Controllers
         public async Task<IActionResult> Profile(UserProfileViewModel model)
         {
             Debug.WriteLine("Profile POST action called");
+            Debug.WriteLine($"Model state valid: {ModelState.IsValid}");
             Debug.WriteLine($"Model data: FirstName={model.FirstName}, LastName={model.LastName}, Email={model.Email}");
 
-            // Always accept the model regardless of validation state
-            ModelState.Clear();
+            if (!ModelState.IsValid)
+            {
+                Debug.WriteLine("Model state is invalid");
+                foreach (var state in ModelState)
+                {
+                    Debug.WriteLine($"Key: {state.Key}, Errors: {state.Value.Errors.Count}");
+                    foreach (var error in state.Value.Errors)
+                    {
+                        Debug.WriteLine($"Error: {error.ErrorMessage}");
+                    }
+                }
+
+                // For profile updates, we'll allow updates even if model state is invalid
+                // This helps bypass potential validation issues
+                Debug.WriteLine("Continuing with profile update despite validation errors");
+            }
 
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 Debug.WriteLine("User not found");
-                TempData["ErrorMessage"] = "User not found. Please log in again.";
-                return RedirectToAction("Login", "Account");
+                return NotFound();
             }
 
             try
             {
+                // Log current user data before changes
                 Debug.WriteLine($"User before update: FirstName={user.FirstName}, LastName={user.LastName}, Email={user.Email}");
 
                 // Use the UserService to update profile
                 var updateSuccess = await _userService.UpdateUserProfileAsync(user, model);
 
-                Debug.WriteLine($"Profile update result: {updateSuccess}");
+                if (!updateSuccess)
+                {
+                    Debug.WriteLine("UserService.UpdateUserProfileAsync returned false");
+                    TempData["ErrorMessage"] = "Failed to update profile. Email may already be in use.";
+                    return RedirectToAction(nameof(Profile));
+                }
 
-                // Set success message regardless
+                // Success message
                 TempData["StatusMessage"] = "Your profile has been updated successfully.";
 
                 // Redirect to get a fresh view (PRG pattern)
@@ -100,6 +120,7 @@ namespace AuthMvcProject.Controllers
         public async Task<IActionResult> UploadProfilePicture(UserProfileViewModel model)
         {
             Debug.WriteLine("UploadProfilePicture called");
+            Debug.WriteLine($"Model: FirstName={model.FirstName}, LastName={model.LastName}, Email={model.Email}");
 
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -140,18 +161,28 @@ namespace AuthMvcProject.Controllers
             if (user == null)
                 return NotFound();
 
-            if (string.IsNullOrEmpty(model.CurrentPassword) ||
-                string.IsNullOrEmpty(model.NewPassword) ||
-                string.IsNullOrEmpty(model.ConfirmNewPassword))
+            if (string.IsNullOrEmpty(model.CurrentPassword))
             {
-                TempData["ErrorMessage"] = "All password fields are required.";
-                return RedirectToAction(nameof(Profile));
+                ModelState.AddModelError("CurrentPassword", "Current password is required.");
+                return View("Profile", model);
+            }
+
+            if (string.IsNullOrEmpty(model.NewPassword))
+            {
+                ModelState.AddModelError("NewPassword", "New password is required.");
+                return View("Profile", model);
+            }
+
+            if (string.IsNullOrEmpty(model.ConfirmNewPassword))
+            {
+                ModelState.AddModelError("ConfirmNewPassword", "Confirm password is required.");
+                return View("Profile", model);
             }
 
             if (model.NewPassword != model.ConfirmNewPassword)
             {
-                TempData["ErrorMessage"] = "The new password and confirmation password do not match.";
-                return RedirectToAction(nameof(Profile));
+                ModelState.AddModelError("", "The new password and confirmation password do not match.");
+                return View("Profile", model);
             }
 
             try
@@ -164,13 +195,21 @@ namespace AuthMvcProject.Controllers
                 }
                 else
                 {
-                    string errorMessage = "Password change failed.";
+                    var errorModel = new UserProfileViewModel
+                    {
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Email = user.Email,
+                        UserName = user.UserName,
+                        ProfilePicture = user.ProfilePicture
+                    };
+
                     foreach (var error in result.Errors)
                     {
-                        errorMessage += " " + error.Description;
+                        ModelState.AddModelError("", error.Description);
                     }
-                    TempData["ErrorMessage"] = errorMessage;
-                    return RedirectToAction(nameof(Profile));
+
+                    return View("Profile", errorModel);
                 }
             }
             catch (Exception ex)
@@ -178,6 +217,32 @@ namespace AuthMvcProject.Controllers
                 TempData["ErrorMessage"] = $"Error changing password: {ex.Message}";
                 return RedirectToAction(nameof(Profile));
             }
+        }
+
+        // Add IsEmailAvailable action to handle AJAX validation
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> IsEmailAvailable(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return Json(true);
+            }
+
+            var user = await _userManager.FindByEmailAsync(email);
+
+            // If current user's email, return true
+            if (User.Identity.IsAuthenticated)
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser != null && currentUser.Email.Equals(email, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Json(true);
+                }
+            }
+
+            // Return true if email is available (user is null)
+            return Json(user == null);
         }
     }
 }

@@ -46,30 +46,55 @@ namespace AuthMvcProject.Services
 
             try
             {
-                // Directly update user properties without validation
+                // Update basic properties first
                 user.FirstName = model.FirstName;
                 user.LastName = model.LastName;
 
-                // Email update - with minimal validation
+                // Handle email change separately
+                bool emailChanged = false;
                 if (user.Email != model.Email)
                 {
-                    // Update normalized email directly in database
-                    user.Email = model.Email;
-                    user.NormalizedEmail = model.Email.ToUpper();
-                    user.UserName = model.Email;
-                    user.NormalizedUserName = model.Email.ToUpper();
+                    // Check if email already exists
+                    var existingUser = await _userManager.FindByEmailAsync(model.Email);
+                    if (existingUser != null && existingUser.Id != user.Id)
+                    {
+                        Debug.WriteLine("Email already in use by another account");
+                        return false;
+                    }
+
+                    // Set new email
+                    var setEmailResult = await _userManager.SetEmailAsync(user, model.Email);
+                    if (!setEmailResult.Succeeded)
+                    {
+                        Debug.WriteLine($"Failed to set email: {string.Join(", ", setEmailResult.Errors)}");
+                        return false;
+                    }
+
+                    // Set username to match email if that's your pattern
+                    var setUserNameResult = await _userManager.SetUserNameAsync(user, model.Email);
+                    if (!setUserNameResult.Succeeded)
+                    {
+                        Debug.WriteLine($"Failed to set username: {string.Join(", ", setUserNameResult.Errors)}");
+                        return false;
+                    }
+
+                    emailChanged = true;
+                    Debug.WriteLine("Email and username updated successfully");
                 }
 
-                // Directly update using context to bypass UserManager validation
-                _context.Entry(user).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
+                // If email wasn't changed, we still need to update the user record
+                if (!emailChanged)
+                {
+                    var result = await _userManager.UpdateAsync(user);
+                    if (!result.Succeeded)
+                    {
+                        Debug.WriteLine($"Failed to update user: {string.Join(", ", result.Errors)}");
+                        return false;
+                    }
+                    Debug.WriteLine("User basic properties updated successfully");
+                }
 
-                Debug.WriteLine("Database updated directly");
-
-                // Also try the UserManager update as fallback
-                var result = await _userManager.UpdateAsync(user);
-                Debug.WriteLine($"UserManager update succeeded: {result.Succeeded}");
-
+                // If we got here, the update was successful
                 return true;
             }
             catch (Exception ex)
