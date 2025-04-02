@@ -64,7 +64,8 @@ function initSmoothScroll() {
 
 // Password strength meter
 function initPasswordStrengthMeter() {
-    const passwordInput = document.getElementById('Password');
+    // Changed 'Password' to lowercase 'password' to match the ID in the view
+    const passwordInput = document.getElementById('password');
     const strengthMeter = document.getElementById('password-strength-meter');
     const strengthText = document.getElementById('password-strength-text');
 

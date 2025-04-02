@@ -6,10 +6,12 @@ namespace AuthMvcProject.Models
     public class UserProfileViewModel
     {
         [Required(ErrorMessage = "First name is required")]
+        [StringLength(50, ErrorMessage = "First name cannot be longer than 50 characters")]
         [Display(Name = "First Name")]
         public string FirstName { get; set; }
 
         [Required(ErrorMessage = "Last name is required")]
+        [StringLength(50, ErrorMessage = "Last name cannot be longer than 50 characters")]
         [Display(Name = "Last Name")]
         public string LastName { get; set; }
 
@@ -23,16 +25,18 @@ namespace AuthMvcProject.Models
 
         public string ProfilePicture { get; set; }
 
-        [Display(Name = "Upload New Profile Picture")]
+        [Display(Name = "Profile Picture")]
         public IFormFile ProfilePictureFile { get; set; }
 
+        // Password Change Properties
         [DataType(DataType.Password)]
         [Display(Name = "Current Password")]
         public string CurrentPassword { get; set; }
 
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "New Password")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$",
+            ErrorMessage = "Password must be at least 8 characters and include uppercase, lowercase, number, and special character")]
         public string NewPassword { get; set; }
 
         [DataType(DataType.Password)]

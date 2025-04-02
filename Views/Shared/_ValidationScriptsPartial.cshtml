@@ -23,19 +23,25 @@
                 );
         }, "Please use a strong password with at least 8 characters, including uppercase, lowercase, number, and special character.");
 
-        // Apply to password fields
-        $("form").each(function () {
-            $(this).data("validator", null);
-            $.validator.unobtrusive.parse($(this));
-            $(this).validate($(this).data("unobtrusiveValidation").options);
+        // Connect the strongPassword validator to data-val-strongpassword attribute
+        $.validator.unobtrusive.adapters.add("strongpassword", function (options) {
+            options.rules["strongPassword"] = true;
+            if (options.message) {
+                options.messages["strongPassword"] = options.message;
+            }
         });
 
         // Add visual feedback for validation
         $('form input, form select, form textarea').on('blur', function () {
-            if ($(this).valid()) {
-                $(this).removeClass('is-invalid').addClass('is-valid');
-            } else {
-                $(this).removeClass('is-valid').addClass('is-invalid');
+            var $this = $(this);
+            try {
+                if ($this.valid()) {
+                    $this.removeClass('is-invalid').addClass('is-valid');
+                } else {
+                    $this.removeClass('is-valid').addClass('is-invalid');
+                }
+            } catch (e) {
+                console.log("Validation error on element:", $this);
             }
         });
 
@@ -47,6 +53,20 @@
         // Remove validation classes on form reset
         $('form').on('reset', function () {
             $(this).find('input, select, textarea').removeClass('is-invalid is-valid');
+        });
+
+        // Safe validation initialization for each form
+        $("form").each(function () {
+            try {
+                // Clear any previous validator
+                $(this).removeData("validator");
+                $(this).removeData("unobtrusiveValidation");
+
+                // Re-parse the form
+                $.validator.unobtrusive.parse($(this));
+            } catch (e) {
+                console.error("Error initializing validation for form:", e);
+            }
         });
     });
 </script>

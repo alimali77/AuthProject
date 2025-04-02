@@ -2,9 +2,7 @@
 @{
     ViewData["Title"] = "Register";
 }
-
 <div class="auth-bg"></div>
-
 <div class="auth-container fade-in">
     <div class="text-center auth-header">
         <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="currentColor" class="bi bi-person-plus text-primary" viewBox="0 0 16 16">
@@ -14,12 +12,10 @@
         <h1 class="h3 mt-3">Create an Account</h1>
         <p class="text-muted">Fill out the form below to get started</p>
     </div>
-
     <div class="card auth-card">
         <div class="card-body p-4">
             <form asp-action="Register" method="post" id="registerForm" onsubmit="return showLoader('registerButton')">
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label asp-for="FirstName" class="form-label">First Name</label>
@@ -32,7 +28,6 @@
                         <span asp-validation-for="LastName" class="text-danger"></span>
                     </div>
                 </div>
-
                 <div class="mb-3">
                     <label asp-for="Email" class="form-label">Email address</label>
                     <div class="input-group">
@@ -41,12 +36,11 @@
                     </div>
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
-
                 <div class="mb-3">
                     <label asp-for="Password" class="form-label">Password</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                        <input asp-for="Password" class="form-control" id="password" />
+                        <input asp-for="Password" class="form-control" id="password" data-val="true" data-val-strongpassword="Please use a strong password with at least 8 characters, including uppercase, lowercase, number, and special character." />
                         <button class="input-group-text btn btn-outline-secondary" type="button"
                                 onclick="togglePasswordVisibility('password', 'toggleIcon')">
                             <i id="toggleIcon" class="bi bi-eye"></i>
@@ -58,7 +52,6 @@
                         <p id="password-strength-text" class="mt-1 small text-muted">Password strength</p>
                     </div>
                 </div>
-
                 <div class="mb-4">
                     <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
                     <div class="input-group">
@@ -71,7 +64,6 @@
                     </div>
                     <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                 </div>
-
                 <div class="d-grid gap-2">
                     <button type="submit" class="btn btn-primary btn-lg" id="registerButton">
                         Create Account
@@ -80,12 +72,10 @@
             </form>
         </div>
     </div>
-
     <div class="text-center mt-4">
         <p>Already have an account? <a asp-action="Login" class="text-decoration-none">Sign in</a></p>
     </div>
 </div>
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

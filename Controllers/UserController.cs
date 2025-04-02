@@ -37,6 +37,16 @@ namespace AuthMvcProject.Controllers
                 ProfilePicture = user.ProfilePicture
             };
 
+            // Check for TempData messages
+            if (TempData["StatusMessage"] != null)
+            {
+                ViewBag.StatusMessage = TempData["StatusMessage"];
+            }
+            if (TempData["ErrorMessage"] != null)
+            {
+                ViewBag.ErrorMessage = TempData["ErrorMessage"];
+            }
+
             return View(model);
         }
 
@@ -74,39 +84,29 @@ namespace AuthMvcProject.Controllers
                 // Log current user data before changes
                 Debug.WriteLine($"User before update: FirstName={user.FirstName}, LastName={user.LastName}, Email={user.Email}");
 
-                // KEY CHANGE: Use the UserService instead of direct manipulation
+                // Use the UserService to update profile
                 var updateSuccess = await _userService.UpdateUserProfileAsync(user, model);
 
                 if (!updateSuccess)
                 {
                     Debug.WriteLine("UserService.UpdateUserProfileAsync returned false");
-                    ViewBag.ErrorMessage = "Failed to update profile. Please try again.";
-                    return View(model);
+                    TempData["ErrorMessage"] = "Failed to update profile. Email may already be in use.";
+                    return RedirectToAction(nameof(Profile));
                 }
 
-                // Refresh user data after update
-                user = await _userManager.FindByIdAsync(user.Id);
-                Debug.WriteLine($"User after update: FirstName={user.FirstName}, LastName={user.LastName}, Email={user.Email}");
+                // Success message
+                TempData["StatusMessage"] = "Your profile has been updated successfully.";
 
-                // Create a new model with the updated user data
-                var updatedModel = new UserProfileViewModel
-                {
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Email = user.Email,
-                    UserName = user.UserName,
-                    ProfilePicture = user.ProfilePicture
-                };
-
-                ViewBag.StatusMessage = "Your profile has been updated successfully.";
-                return View(updatedModel);
+                // Redirect to get a fresh view (PRG pattern)
+                return RedirectToAction(nameof(Profile));
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error updating profile: {ex.Message}");
                 Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-                ViewBag.ErrorMessage = $"An error occurred: {ex.Message}";
-                return View(model);
+
+                TempData["ErrorMessage"] = $"An error occurred: {ex.Message}";
+                return RedirectToAction(nameof(Profile));
             }
         }
 
@@ -122,46 +122,29 @@ namespace AuthMvcProject.Controllers
             if (user == null)
                 return NotFound();
 
-            // Prepare model to return to view - preserve all form fields
-            var returnModel = new UserProfileViewModel
-            {
-                FirstName = model.FirstName ?? user.FirstName,
-                LastName = model.LastName ?? user.LastName,
-                Email = model.Email ?? user.Email,
-                UserName = user.UserName,
-                ProfilePicture = user.ProfilePicture
-            };
-
             try
             {
                 if (model.ProfilePictureFile == null || model.ProfilePictureFile.Length == 0)
                 {
-                    ViewBag.ErrorMessage = "No file was selected.";
-                    return View("Profile", returnModel);
+                    TempData["ErrorMessage"] = "No file was selected.";
+                    return RedirectToAction(nameof(Profile));
                 }
 
                 var fileName = await _userService.SaveProfilePictureAsync(user.Id, model.ProfilePictureFile);
-
                 if (string.IsNullOrEmpty(fileName))
                 {
-                    ViewBag.ErrorMessage = "Failed to upload profile picture.";
-                    return View("Profile", returnModel);
+                    TempData["ErrorMessage"] = "Failed to upload profile picture.";
+                    return RedirectToAction(nameof(Profile));
                 }
 
-                // Refresh user data
-                user = await _userManager.FindByIdAsync(user.Id);
-
-                // Update return model with new profile picture
-                returnModel.ProfilePicture = user.ProfilePicture;
-
-                ViewBag.StatusMessage = "Profile picture updated successfully.";
-                return View("Profile", returnModel);
+                TempData["StatusMessage"] = "Profile picture updated successfully.";
+                return RedirectToAction(nameof(Profile));
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error uploading profile picture: {ex.Message}");
-                ViewBag.ErrorMessage = $"Error uploading profile picture: {ex.Message}";
-                return View("Profile", returnModel);
+                TempData["ErrorMessage"] = $"Error uploading profile picture: {ex.Message}";
+                return RedirectToAction(nameof(Profile));
             }
         }
 
@@ -174,62 +157,61 @@ namespace AuthMvcProject.Controllers
             if (user == null)
                 return NotFound();
 
-            // Prepare model to return to view with current user data
-            var returnModel = new UserProfileViewModel
-            {
-                FirstName = model.FirstName ?? user.FirstName,
-                LastName = model.LastName ?? user.LastName,
-                Email = model.Email ?? user.Email,
-                UserName = user.UserName,
-                ProfilePicture = user.ProfilePicture
-            };
-
             if (string.IsNullOrEmpty(model.CurrentPassword))
             {
                 ModelState.AddModelError("CurrentPassword", "Current password is required.");
-                return View("Profile", returnModel);
+                return View("Profile", model);
             }
 
             if (string.IsNullOrEmpty(model.NewPassword))
             {
                 ModelState.AddModelError("NewPassword", "New password is required.");
-                return View("Profile", returnModel);
+                return View("Profile", model);
             }
 
             if (string.IsNullOrEmpty(model.ConfirmNewPassword))
             {
                 ModelState.AddModelError("ConfirmNewPassword", "Confirm password is required.");
-                return View("Profile", returnModel);
+                return View("Profile", model);
             }
 
             if (model.NewPassword != model.ConfirmNewPassword)
             {
                 ModelState.AddModelError("", "The new password and confirmation password do not match.");
-                return View("Profile", returnModel);
+                return View("Profile", model);
             }
 
             try
             {
                 var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
-
                 if (result.Succeeded)
                 {
-                    ViewBag.StatusMessage = "Your password has been changed successfully.";
+                    TempData["StatusMessage"] = "Your password has been changed successfully.";
+                    return RedirectToAction(nameof(Profile));
                 }
                 else
                 {
+                    var errorModel = new UserProfileViewModel
+                    {
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Email = user.Email,
+                        UserName = user.UserName,
+                        ProfilePicture = user.ProfilePicture
+                    };
+
                     foreach (var error in result.Errors)
                     {
                         ModelState.AddModelError("", error.Description);
                     }
-                }
 
-                return View("Profile", returnModel);
+                    return View("Profile", errorModel);
+                }
             }
             catch (Exception ex)
             {
-                ViewBag.ErrorMessage = $"Error changing password: {ex.Message}";
-                return View("Profile", returnModel);
+                TempData["ErrorMessage"] = $"Error changing password: {ex.Message}";
+                return RedirectToAction(nameof(Profile));
             }
         }
     }
