@@ -1,0 +1,153 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="hero-section p-5 text-white rounded-4 mb-5 fade-in">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h1 class="hero-title">Auth Application Umelle </h1>
+                    <p class="hero-subtitle">
+                        This is a user management system developed by Ali for Ivan.
+                    </p>
+                    @if (!User.Identity.IsAuthenticated)
+                    {
+                        <div class="d-flex flex-wrap gap-3">
+                            <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-lg px-4 py-2">
+                                <i class="bi bi-person-plus me-2"></i>Create Account
+                            </a>
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light btn-lg px-4 py-2">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-wrap gap-3">
+                            <a asp-controller="User" asp-action="Profile" class="btn btn-light btn-lg px-4 py-2">
+                                <i class="bi bi-person me-2"></i>My Profile
+                            </a>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a asp-controller="Admin" asp-action="Index" class="btn btn-outline-light btn-lg px-4 py-2">
+                                    <i class="bi bi-speedometer2 me-2"></i>Admin Dashboard
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="col-lg-5 d-none d-lg-block text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="280" height="280" fill="currentColor" class="bi bi-shield-lock" viewBox="0 0 16 16">
+                        <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.061.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.775 11.775 0 0 1-2.517 2.453 7.159 7.159 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7.158 7.158 0 0 1-1.048-.625 11.777 11.777 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 62.456 62.456 0 0 1 5.072.56z" />
+                        <path d="M9.5 6.5a1.5 1.5 0 0 1-1 1.415l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99a1.5 1.5 0 1 1 2-1.415z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100 hover-lift">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon feature-icon-primary mx-auto mb-4">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <h3 class="card-title h4 mb-3">Secure Authentication</h3>
+                <p class="card-text">
+                    Robust user authentication with identity management, password policies, and role-based authorization.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100 hover-lift">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon feature-icon-secondary mx-auto mb-4">
+                    <i class="bi bi-person-gear"></i>
+                </div>
+                <h3 class="card-title h4 mb-3">User Management</h3>
+                <p class="card-text">
+                    Complete user profile management with personal details, profile pictures, and account settings.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100 hover-lift">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon feature-icon-success mx-auto mb-4">
+                    <i class="bi bi-layout-text-window"></i>
+                </div>
+                <h3 class="card-title h4 mb-3">Modern Interface</h3>
+                <p class="card-text">
+                    Clean, responsive design with intuitive navigation and a seamless user experience across all devices.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-body p-4">
+                <h3 class="card-title h4 mb-3">Getting Started</h3>
+                <p>Welcome to our Identity Platform! Here's how to get started:</p>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item bg-transparent px-0">
+                        <i class="bi bi-1-circle-fill text-primary me-2"></i> Create an account or sign in
+                    </li>
+                    <li class="list-group-item bg-transparent px-0">
+                        <i class="bi bi-2-circle-fill text-primary me-2"></i> Set up your profile with personal details
+                    </li>
+                    <li class="list-group-item bg-transparent px-0">
+                        <i class="bi bi-3-circle-fill text-primary me-2"></i> Upload a profile picture
+                    </li>
+                    <li class="list-group-item bg-transparent px-0">
+                        <i class="bi bi-4-circle-fill text-primary me-2"></i> Explore the platform features
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-body p-4">
+                <h3 class="card-title h4 mb-3">Features Overview</h3>
+                <div class="d-flex align-items-start mb-3">
+                    <div class="me-3">
+                        <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1">Role-based Authorization</h5>
+                        <p class="mb-0 text-muted">Admin and User roles with different access levels</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-start mb-3">
+                    <div class="me-3">
+                        <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1">Profile Management</h5>
+                        <p class="mb-0 text-muted">Update personal information and profile pictures</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-start">
+                    <div class="me-3">
+                        <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1">Admin Dashboard</h5>
+                        <p class="mb-0 text-muted">Manage users, toggle status, and more</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

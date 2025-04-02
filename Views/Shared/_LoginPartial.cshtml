@@ -1,0 +1,56 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using AuthMvcProject.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        var user = await UserManager.GetUserAsync(User);
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <img src="@(string.IsNullOrEmpty(user?.ProfilePicture)
+                          ? "/uploads/profiles/default-profile.png"
+                          : $"/uploads/profiles/{user.ProfilePicture}")"
+                     alt="Profile" class="profile-pic-small rounded-circle me-2">
+                <span>@user?.FirstName @user?.LastName</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li>
+                    <a class="dropdown-item" asp-controller="User" asp-action="Profile">
+                        <i class="bi bi-person me-2"></i> My Profile
+                    </a>
+                </li>
+                @if (User.IsInRole("Admin"))
+                {
+                    <li>
+                        <a class="dropdown-item" asp-controller="Admin" asp-action="Index">
+                            <i class="bi bi-gear me-2"></i> Admin Panel
+                        </a>
+                    </li>
+                }
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form class="form-inline" asp-controller="Account" asp-action="Logout" asp-route-returnUrl="@Url.Action("Index", "Home")" method="post">
+                        <button type="submit" class="dropdown-item">
+                            <i class="bi bi-box-arrow-right me-2"></i> Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link btn btn-outline-primary me-2" asp-controller="Account" asp-action="Login">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Login
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link btn btn-primary text-white" asp-controller="Account" asp-action="Register">
+                <i class="bi bi-person-plus me-1"></i> Register
+            </a>
+        </li>
+    }
+</ul>

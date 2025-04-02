@@ -1,0 +1,256 @@
+﻿@model AuthMvcProject.Models.UserProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+<div class="container profile-container fade-in">
+    <div class="page-header">
+        <h1 class="display-4">My Profile</h1>
+    </div>
+    @if (ViewBag.StatusMessage != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @ViewBag.StatusMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @ViewBag.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card hover-lift">
+                <div class="card-body text-center">
+                    <div class="profile-picture-container mb-3">
+                        <img src="@(string.IsNullOrEmpty(Model.ProfilePicture)
+                                    ? "/uploads/profiles/default-profile.png"
+                                    : $"/uploads/profiles/{Model.ProfilePicture}")"
+                             alt="Profile Picture" id="profilePreview"
+                             class="profile-picture rounded-circle">
+                        <label for="ProfilePictureFile" class="profile-picture-edit">
+                            <i class="bi bi-camera"></i>
+                        </label>
+                    </div>
+
+                    <h4 class="mb-1">@Model.FirstName @Model.LastName</h4>
+                    <p class="text-muted mb-3">@Model.Email</p>
+
+                    <form asp-controller="User" asp-action="UploadProfilePicture" method="post" enctype="multipart/form-data" id="photoForm">
+                        <input asp-for="ProfilePictureFile" id="ProfilePictureFile" class="d-none" accept="image/*">
+
+                        <!-- Include hidden fields for all model properties -->
+                        <input type="hidden" asp-for="FirstName" />
+                        <input type="hidden" asp-for="LastName" />
+                        <input type="hidden" asp-for="Email" />
+                        <input type="hidden" asp-for="UserName" />
+                        <input type="hidden" asp-for="ProfilePicture" />
+                    </form>
+
+                    <div class="d-grid gap-2 w-100">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="collapse"
+                                data-bs-target="#passwordSection" aria-expanded="false">
+                            <i class="bi bi-shield-lock me-2"></i>Change Password
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card hover-lift mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-controller="User" asp-action="Profile" method="post" id="profileForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="FirstName" class="form-label">First Name</label>
+                                <input asp-for="FirstName" class="form-control" />
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="LastName" class="form-label">Last Name</label>
+                                <input asp-for="LastName" class="form-control" />
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">Email Address</label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="UserName" class="form-label">Username</label>
+                            <input asp-for="UserName" class="form-control" readonly />
+                        </div>
+
+                        <!-- Hidden field to preserve profile picture value -->
+                        <input type="hidden" asp-for="ProfilePicture" />
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary btn-interactive" id="saveProfileBtn">
+                                <i class="bi bi-check-circle me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="collapse" id="passwordSection">
+                <div class="card hover-lift">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-key me-2"></i>Change Password</h5>
+                    </div>
+                    <div class="card-body">
+                        <form asp-controller="User" asp-action="ChangePassword" method="post">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                            <!-- Hidden fields to maintain state -->
+                            <input type="hidden" asp-for="FirstName" />
+                            <input type="hidden" asp-for="LastName" />
+                            <input type="hidden" asp-for="Email" />
+                            <input type="hidden" asp-for="UserName" />
+                            <input type="hidden" asp-for="ProfilePicture" />
+
+                            <div class="mb-3">
+                                <label asp-for="CurrentPassword" class="form-label">Current Password</label>
+                                <div class="input-group">
+                                    <input asp-for="CurrentPassword" class="form-control" id="currentPassword" />
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('currentPassword', 'currentPasswordIcon')">
+                                        <i id="currentPasswordIcon" class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="CurrentPassword" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="NewPassword" class="form-label">New Password</label>
+                                <div class="input-group">
+                                    <input asp-for="NewPassword" class="form-control" id="newPassword" />
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('newPassword', 'newPasswordIcon')">
+                                        <i id="newPasswordIcon" class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="NewPassword" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="ConfirmNewPassword" class="form-label">Confirm New Password</label>
+                                <div class="input-group">
+                                    <input asp-for="ConfirmNewPassword" class="form-control" id="confirmNewPassword" />
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmNewPassword', 'confirmNewPasswordIcon')">
+                                        <i id="confirmNewPasswordIcon" class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="ConfirmNewPassword" class="text-danger"></span>
+                            </div>
+
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary btn-interactive">
+                                    <i class="bi bi-shield-check me-2"></i>Update Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Toggle password visibility
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.replace("bi-eye", "bi-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.replace("bi-eye-slash", "bi-eye");
+            }
+        }
+
+        // Profile picture preview and auto-submit
+        document.getElementById('ProfilePictureFile').addEventListener('change', function (e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('profilePreview').src = e.target.result;
+
+                    // Copy current form values to the photo form
+                    const firstNameInput = document.querySelector('#profileForm [name="FirstName"]');
+                    const lastNameInput = document.querySelector('#profileForm [name="LastName"]');
+                    const emailInput = document.querySelector('#profileForm [name="Email"]');
+
+                    if (firstNameInput) document.querySelector('#photoForm [name="FirstName"]').value = firstNameInput.value;
+                    if (lastNameInput) document.querySelector('#photoForm [name="LastName"]').value = lastNameInput.value;
+                    if (emailInput) document.querySelector('#photoForm [name="Email"]').value = emailInput.value;
+
+                    // Auto-submit the form after showing preview
+                    setTimeout(function () {
+                        document.getElementById('photoForm').submit();
+                    }, 300);
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        // Debug for profile form submission
+        document.addEventListener('DOMContentLoaded', function () {
+            const profileForm = document.getElementById('profileForm');
+            if (profileForm) {
+                console.log('Profile form detected');
+
+                // Create a visual indicator for form submission
+                const submitBtn = document.getElementById('saveProfileBtn');
+                if (submitBtn) {
+                    const originalOnclick = submitBtn.onclick;
+
+                    submitBtn.addEventListener('click', function (e) {
+                        console.log('Save profile button clicked');
+
+                        // Log form data being submitted
+                        const formData = new FormData(profileForm);
+                        console.log('Form data being submitted:');
+                        for (let [key, value] of formData.entries()) {
+                            console.log(`${key}: ${value}`);
+                        }
+
+                        // Show loading indicator
+                        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+                        this.disabled = true;
+
+                        // Continue with form submission
+                        setTimeout(() => {
+                            profileForm.submit();
+                        }, 100);
+                    });
+                }
+
+                // Monitor form submission
+                profileForm.addEventListener('submit', function (e) {
+                    console.log('Form submit event triggered');
+                    console.log('Action URL:', profileForm.action);
+                    console.log('Method:', profileForm.method);
+
+                    // Don't prevent default - let the form submit normally
+                });
+            }
+        });
+    </script>
+}

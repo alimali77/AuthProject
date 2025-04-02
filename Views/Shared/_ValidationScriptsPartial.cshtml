@@ -1,0 +1,52 @@
+﻿<!-- Client-side validation scripts for forms -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"
+        integrity="sha512-37T7leoNS06R80c8Ulq7cdCDU5MNQBwlYoy1TX/WUsLFC2eYNqtKlV0QjH7r8JpG/S0GUMZwebnVFLPd6SU5yg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"
+        integrity="sha512-o6XqxgrUsKmchwy9G5VRNWSSxTS4Urr4loO6/0hYdpWmFUfHqGzawGxeQGMDqYzxjY9sbktPbNlkIQJWagVZQg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    // Custom validation methods
+    $(document).ready(function () {
+        // Add custom validation method for strong password
+        $.validator.addMethod("strongPassword", function (value, element) {
+            return this.optional(element) ||
+                (
+                    /[A-Z]/.test(value) && // Has uppercase
+                    /[a-z]/.test(value) && // Has lowercase
+                    /[0-9]/.test(value) && // Has number
+                    /[^A-Za-z0-9]/.test(value) && // Has special character
+                    value.length >= 8 // Minimum length
+                );
+        }, "Please use a strong password with at least 8 characters, including uppercase, lowercase, number, and special character.");
+
+        // Apply to password fields
+        $("form").each(function () {
+            $(this).data("validator", null);
+            $.validator.unobtrusive.parse($(this));
+            $(this).validate($(this).data("unobtrusiveValidation").options);
+        });
+
+        // Add visual feedback for validation
+        $('form input, form select, form textarea').on('blur', function () {
+            if ($(this).valid()) {
+                $(this).removeClass('is-invalid').addClass('is-valid');
+            } else {
+                $(this).removeClass('is-valid').addClass('is-invalid');
+            }
+        });
+
+        // Clear validation classes on focus
+        $('form input, form select, form textarea').on('focus', function () {
+            $(this).removeClass('is-invalid is-valid');
+        });
+
+        // Remove validation classes on form reset
+        $('form').on('reset', function () {
+            $(this).find('input, select, textarea').removeClass('is-invalid is-valid');
+        });
+    });
+</script>
